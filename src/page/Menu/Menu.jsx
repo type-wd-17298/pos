@@ -4,8 +4,8 @@ import { BookMarkedIcon, MinusCircle, PlusCircle } from "lucide-react";
 import CardCategory from "../../components/CardCategory";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
-import useSWR from "swr";
-import fetcher from "../../components/fetcher";
+// import useSWR from "swr";
+// import fetcher from "../../components/fetcher";
 
 export default function Menu() {
   const [orderItems, setOrderItems] = useState([]);
