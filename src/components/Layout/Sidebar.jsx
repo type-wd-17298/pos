@@ -1,12 +1,12 @@
 import {
   BookMarkedIcon,
+  ChevronDown,
   // ChevronDown,
   ChevronLeft,
-  // ChevronRight,
-  LucideInfo,
+  ChevronRight,
   MenuIcon,
   SettingsIcon,
-  UserIcon,
+  UserIcon
 } from "lucide-react";
 import PropTypes from "prop-types";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -23,15 +23,20 @@ const userInfo = {
 
 const Sidebar = ({ children }) => {
   const [expanded, setExpanded] = useState(true);
+  const [openSubMenu, setOpenSubMenu] = useState(null);
 
   const toggleSidebar = () => setExpanded((prev) => !prev);
 
   const handleResize = () => {
-    if (window.innerWidth <= 1200) {
+    if (window.innerWidth <= 1500) {
       setExpanded(false);
     } else {
       setExpanded(true);
     }
+  };
+
+  const handleMenuClick = (menuId) => {
+    setOpenSubMenu(openSubMenu === menuId ? null : menuId); // เปิด/ปิดเมนูย่อย
   };
 
   useEffect(() => {
@@ -43,7 +48,7 @@ const Sidebar = ({ children }) => {
   return (
     <SidebarContext.Provider value={{ expanded }}>
       <aside className="h-screen">
-        <nav className="h-full flex flex-col bg-white  shadow-sm">
+        <nav className="h-full flex flex-col bg-white shadow-sm">
           <div className="p-4 pb-2 flex justify-between items-center">
             <div
               className={`flex flex-row justify-center items-center pl-6${
@@ -79,7 +84,18 @@ const Sidebar = ({ children }) => {
             </button>
           </div>
 
-          <ul className="flex-1 px-3">{children}</ul>
+          <ul className="flex-1 px-3">
+            {React.Children.map(children, (child) => {
+              if (child.props.hasSubMenu) {
+                return React.cloneElement(child, {
+                  openSubMenu,
+                  handleMenuClick,
+                });
+              }
+              return child;
+            })}
+          </ul>
+
           <div className="pl-2 mt-auto mb-4 flex items-center">
             <div className="w-10 h-10 rounded-full flex justify-center items-center bg-indigo-300 text-white font-semibold">
               {userInfo?.FirstName?.[0]}
@@ -111,105 +127,87 @@ const Sidebar = ({ children }) => {
 
 // eslint-disable-next-line react/display-name
 const SidebarItem = React.forwardRef(
-  ({ icon, text, active, alert, to, onClick, className }, ref) => {
+  ({ icon, text, active, alert, to, onClick, className, subMenu }, ref) => {
     const { expanded } = useContext(SidebarContext);
+    const [isSubMenuOpen, setSubMenuOpen] = useState(false);
+
+    const toggleSubMenu = () => setSubMenuOpen((prev) => !prev);
+
+    const handleMainMenuClick = (e) => {
+      onClick && onClick(e); // เรียกฟังก์ชัน onClick ของเมนูหลัก (ถ้ามี)
+      if (subMenu) {
+        if (isSubMenuOpen) {
+          setSubMenuOpen(false);
+        } else {
+          setSubMenuOpen(true);
+        }
+        // เปิดเมนูย่อยโดยอัตโนมัติ
+      } else {
+        setSubMenuOpen(false);
+      }
+    };
 
     return (
-      <li
-        ref={ref}
-        className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors group ${
-          active
-            ? "bg-gradient-to-tr from-indigo-200 to-indigo-100 text-indigo-800"
-            : "hover:bg-indigo-50 text-gray-600"
-        } ${className}`}
-      >
-        <Link to={to} onClick={onClick} className="flex items-center w-full">
-          {icon}
-          <span
-            className={`overflow-hidden transition-all  ${
-              expanded ? "w-52 ml-3" : "w-0"
-            }`}
-            style={{ whiteSpace: "nowrap" }}
+      <li ref={ref} className={`relative`}>
+        <div
+          className={`flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors group ${
+            active
+              ? "bg-gradient-to-tr from-indigo-200 to-indigo-100 text-indigo-800"
+              : "hover:bg-indigo-50 text-gray-600"
+          } ${className}`}
+        >
+          <Link
+            to={to}
+            onClick={handleMainMenuClick}
+            className="flex items-center w-full"
           >
-            {text}
-          </span>
-        </Link>
-        {alert && (
-          <div
-            className={`absolute right-2 w-2 h-2 rounded bg-indigo-400 z-50${
-              expanded ? "" : "top-2"
-            }`}
-          />
-        )}
+            {icon}
+            <span
+              className={`overflow-hidden transition-all ${
+                expanded ? "w-52 ml-3" : "w-0"
+              }`}
+              style={{ whiteSpace: "nowrap" }}
+            >
+              {text}
+            </span>
+          </Link>
 
-        {!expanded && (
-          <div
-            className="z-50 absolute left-full rounded-md px-2 py-1 ml-6 bg-indigo-100 text-indigo-800 text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0"
-            style={{ whiteSpace: "nowrap" }}
-          >
-            {text}
-          </div>
+          {alert && (
+            <div className="absolute right-2 w-2 h-2 rounded bg-indigo-400 z-50" />
+          )}
+
+          {subMenu && expanded && (
+            <button
+              onClick={toggleSubMenu}
+              className="ml-auto text-gray-500 hover:text-indigo-600 transition-all"
+            >
+              {isSubMenuOpen ? <ChevronDown /> : <ChevronRight />}
+            </button>
+          )}
+        </div>
+
+        {subMenu && isSubMenuOpen && expanded && (
+          <ul className="ml-4 border-l border-gray-300 pl-4 mt-1 space-y-1">
+            {subMenu.map((item, index) => (
+              <SidebarItem
+                key={index}
+                to={item.to}
+                text={item.text}
+                active={active}
+                onClick={item.onClick}
+                expanded={expanded}
+              />
+            ))}
+          </ul>
         )}
       </li>
     );
   }
 );
 
-
 export default function SidebarContainer() {
   const [activeMenu, setActiveMenu] = useState("");
   const { expanded } = useContext(SidebarContext);
-
-  // const listMenuAdmin = [
-  //   <SidebarItem
-  //     key="Menu"
-  //     to="/menu"
-  //     icon={<BookMarkedIcon className="h-5 w-5" />}
-  //     text="Menu"
-  //     active={activeMenu === "menu"}
-  //     alert={false}
-  //     onClick={() => setActiveMenu("menu")}
-  //   />,
-  //   <SidebarItem
-  //     key="Configuration"
-  //     // to="/configuration"
-  //     icon={<SettingsIcon className="h-5 w-5" />}
-  //     text="Configuration"
-  //     active={activeMenu === "configuration"}
-  //     onClick={() => setActiveMenu("configuration")}
-  //   >
-  //     <SidebarItem
-  //       to="/configuration/product"
-  //       text="Product"
-  //       active={activeMenu === "product"}
-  //       onClick={() => setActiveMenu("product")}
-  //     />
-  //     <SidebarItem
-  //       to="/configuration/category"
-  //       text="category"
-  //       active={activeMenu === "category"}
-  //       onClick={() => setActiveMenu("category")}
-  //     />
-  //   </SidebarItem>,
-  //   // <SidebarItem
-  //   //   key="control-license"
-  //   //   to="/control license"
-  //   //   icon={<SettingsIcon className="h-5 w-5" />}
-  //   //   text="Configuration"
-  //   //   active={activeMenu === "control-license"}
-  //   //   alert={false}
-  //   //   onClick={() => setActiveMenu("control-license")}
-  //   // />,
-  //   <SidebarItem
-  //     key="users"
-  //     to="/users"
-  //     icon={<UserIcon className="h-5 w-5" />}
-  //     text="Users"
-  //     active={activeMenu === "users"}
-  //     alert={false}
-  //     onClick={() => setActiveMenu("users")}
-  //   />,
-  // ];
 
   const listMenuAdmin = [
     <SidebarItem
@@ -250,7 +248,7 @@ export default function SidebarContainer() {
       onClick={() => setActiveMenu("users")}
     />,
   ];
-  
+
   const listMenuBasic = [
     <SidebarItem
       key="all-license"
@@ -274,20 +272,7 @@ export default function SidebarContainer() {
           </div>
         </nav>
       </div>
-      <div className="mt-auto">
-        <SidebarItem
-          key="help-center"
-          to="#"
-          icon={<LucideInfo className="h-5 w-5" />}
-          text="Help Center"
-          active={activeMenu === "help-center"}
-          alert={false}
-          onClick={() => {}}
-          className={`transition-opacity duration-300 relative flex items-center text-gray-700 hover:text-blue-600 font-semibold ${
-            expanded ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      </div>
+
     </Sidebar>
   );
 }
@@ -301,6 +286,7 @@ SidebarItem.propTypes = {
   onClick: PropTypes.any,
   className: PropTypes.string,
   children: PropTypes.node,
+  subMenu: PropTypes.array,
 };
 
 Sidebar.propTypes = {

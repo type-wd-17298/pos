@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
-import TextField from "@mui/material/TextField";
-import { BookMarkedIcon, MinusCircle, PlusCircle } from "lucide-react";
-import CardCategory from "../../components/CardCategory";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+import { BookMarkedIcon, MinusCircle, PlusCircle } from "lucide-react";
+import { useRef, useState } from "react";
+import CardCategory from "../../components/CardCategory";
 // import useSWR from "swr";
 // import fetcher from "../../components/fetcher";
 
@@ -36,9 +36,9 @@ export default function Menu() {
       "Iced Latte",
     ][index],
     price: [
-      250, 280, 200, 220, 230, 250, 270, 300, 240, 220, 260, 320, 280, 300, 240,
+      250, 280, 200, 220, 230, 250, 270, 300, 240, 220, 260, 320, 280, 300, 250,
     ][index],
-    image: ["/coffee.jpg","/cappuccino.jpg","espresso.jpg"][index],
+    image: ["/coffee.jpg", "/cappuccino.jpg", "espresso.jpg"][index],
   }));
 
   const cardData = [
@@ -115,16 +115,22 @@ export default function Menu() {
   );
 
   const printRef = useRef();
-  console.log("printRef", printRef);
+  // console.log("printRef", printRef);
+
+  // const handlePrintBill = () => {
+  //   const printContent = printRef.current.innerHTML;
+  //   const originalContent = document.body.innerHTML;
+
+  //   document.body.innerHTML = printContent;
+  //   window.print();
+  //   document.body.innerHTML = originalContent;
+  //   window.location.reload(); // รีโหลดหน้าเพื่อกลับมาปกติ
+  // };
 
   const handlePrintBill = () => {
-    const printContent = printRef.current.innerHTML;
-    const originalContent = document.body.innerHTML;
-
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
-    window.location.reload(); // รีโหลดหน้าเพื่อกลับมาปกติ
+    if (printRef.current) {
+      window.print();
+    }
   };
 
   return (
@@ -235,24 +241,37 @@ export default function Menu() {
           <div className="mt-4 border-t pt-2">
             <p className="font-bold text-lg">Total: {totalPrice} bath</p>
           </div>
+          <div className="flex flex-col gap-4 mt-2">
+            <Button
+              variant="contained"
+              color="primary"
+              className="w-full rounded-lg mt-4"
+              onClick={handlePrintBill}
+            >
+              Checkout & Print
+            </Button>
 
-          <Button
-            variant="contained"
-            color="primary"
-            className="w-full rounded-lg mt-4"
-            onClick={handlePrintBill}
-          >
-            Checkout & Print
-          </Button>
+            <Button
+              variant="contained"
+              color="error"
+              className="w-full rounded-lg mt-4"
+              onClick={() => {setOrderItems([])}}
+            >
+              Cancel Order
+            </Button>
+          </div>
         </div>
       )}
 
       {/* ส่วนบิลใบเสร็จ */}
       <div
         ref={printRef}
+        id="printable-content"
         className="hidden print:block p-4 w-80 border shadow-lg bg-white"
       >
-        <h2 className="text-center text-lg font-bold mb-4">Type Café & Restaurant</h2>
+        <h2 className="text-center text-lg font-bold mb-4">
+          Type Café & Restaurant
+        </h2>
         {/* <p className="text-center text-sm">--------------------------</p> */}
 
         {/* ตารางสินค้า */}
@@ -283,7 +302,9 @@ export default function Menu() {
           <span>{totalPrice} ฿</span>
         </div>
 
-        <p className="text-center text-sm mt-4">Thank you for using the service. ❤️</p>
+        <p className="text-center text-sm mt-4">
+          Thank you for using the service. ❤️
+        </p>
       </div>
     </div>
   );

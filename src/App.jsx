@@ -1,9 +1,10 @@
 // App.tsx
 import SidebarContainer from "./components/Layout/Sidebar";
-import SidebarV2 from "./components/Layout/SidebarV2";
 import Menu from "./page/Menu/Menu";
+import MasterCategory from "./page/Configuration/MasterCategory";
+import MasterProduct from "./page/Configuration/MasterProduct";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Navbar from "./components/Layout/Navbar";
+// import Navbar from "./components/Layout/Navbar";
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
           {/* <Navbar /> */}
           <Routes>
             <Route path="/menu" element={<Menu />} />
+            <Route path="/configuration/category" element={<MasterCategory />} />
+            <Route path="/configuration/product" element={<MasterProduct />} />
           </Routes>
         </main>
       </Router>
